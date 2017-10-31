@@ -1,5 +1,6 @@
 #include <iostream>
 #include <SFML/Network.hpp>
+#include <string>
 
 int main() 
 {
@@ -7,6 +8,7 @@ int main()
 	// Create a socket and bind it to the port 55001
 	sf::UdpSocket socket;
 	socket.bind(socket.AnyPort);
+	//socket.setBlocking(false);
 
 	int localPort = socket.getLocalPort();
 
@@ -16,18 +18,13 @@ int main()
 	std::cout << "What's the IP you would like to connect to?";
 	std::cin >> serverIP;
 
-	
-	
-	char messageAdder[256];
+	std::string messageAdder;
 
 	while (true) {
-		std::cin.clear();
-		std::cin.ignore(10000, '\n');
-
 		std::cout << "Your message?";
-		std::cin.getline(messageAdder, 256);
+		std::getline(std::cin, messageAdder);
 
-		socket.send(messageAdder, sizeof(messageAdder) + 1, serverIP, 55002);
+		socket.send(messageAdder.c_str(), messageAdder.size() + 1, serverIP, 55002);
 
 		// Receive an answer (most likely from 192.168.1.50, but could be anyone else)
 		char buffer[1024];
