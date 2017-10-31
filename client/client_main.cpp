@@ -13,7 +13,18 @@ int main() {
 	std::cout << "What's the IP you would like to connect to?";
 	std::cin >> localAdress;
 
-	std::string message = "Hi, I am " + localAdress;
+	std::cin.clear();
+	std::cin.ignore(10000, '\n');
+	
+	char messageAdder[256];
+
+	std::cout << "Your message?";
+	std::cin.getline(messageAdder, 256);
+
+	std::string message = "Hi, I am " + localAdress + " " + messageAdder;
+
+	std::cout << message;
+
 	socket.send(message.c_str(), message.size() + 1, localAdress, 55002);
 
 	// Receive an answer (most likely from 192.168.1.50, but could be anyone else)
