@@ -10,6 +10,9 @@ int main()
 	socket.bind(socket.AnyPort);
 	//socket.setBlocking(false);
 
+	const std::string CLIENT_SIDE = "[Client->]";
+	const std::string CLIENT_SIDE_END = "[<-Client]";
+
 	int localPort = socket.getLocalPort();
 
 	// Send a message to 192.168.1.50 on port 55002
@@ -23,6 +26,9 @@ int main()
 	while (true) {
 		std::cout << "Your message?";
 		std::getline(std::cin, messageAdder);
+
+		messageAdder.insert(0, CLIENT_SIDE);
+		messageAdder.append(CLIENT_SIDE_END);
 
 		socket.send(messageAdder.c_str(), messageAdder.size() + 1, serverIP, 55002);
 

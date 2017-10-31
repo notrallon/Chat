@@ -1,13 +1,19 @@
 #include <iostream>
 #include <sstream>
 #include <SFML/Network.hpp>
+#include "User.h"
 
 int main() 
 {
+	std::vector<User*> users;
+
 	// ----- The server -----
 	// Create a socket and bind it to the port 55002
 	sf::UdpSocket socket;
 	socket.bind(55002);
+
+	const std::string SERVER_SIDE = "[SERVER->]";
+	const std::string SERVER_SIDE_END = "[<-SERVER]";
 
 	std::vector<sf::IpAddress> connectedIPs;
 
@@ -18,6 +24,11 @@ int main()
 		sf::IpAddress sender;
 		unsigned short port;
 		socket.receive(buffer, sizeof(buffer), received, sender, port);
+
+		users.push_back(new User());
+		users[users.size()-1]->SetAdress(sender.toString());
+		users[users.size()-1]->SetName("User[" + std::to_string(users.size()) + "]");
+
 
 		if (connectedIPs.size() > 0) 
 		{
@@ -38,17 +49,26 @@ int main()
 			connectedIPs.push_back(sender);
 		}
 
-		std::cout << sender.toString() << " said: " << buffer << std::endl;
+		std::cout << SERVER_SIDE << sender.toString() << " said: " << buffer << SERVER_SIDE_END << std::endl;
 
-		// Send an answer
-		std::stringstream mstream;
-		mstream << sender.toString() << " said: " << buffer << std::endl;
-		std::string message = mstream.str();
 
-		for (int i = 0; i < connectedIPs.size(); i++) 
+		for (int i = 0; i < users.size(); i++)
 		{
-			socket.send(message.c_str(), message.size() + 1, connectedIPs[i], port);
+			if (users[i]->GetAdress() == sender.toString())
+			{
+				// Send an answer
+				std::stringstream mstream;
+				mstream << SERVER_SIDE << sender.toString() << " said: " << buffer << "... also: Hello " << users[i]->GetName() << SERVER_SIDE_END << std::endl;
+				std::string message = mstream.str();
+
+				for (int i = 0; i < connectedIPs.size(); i++)
+				{
+					socket.send(message.c_str(), message.size() + 1, connectedIPs[i], port);
+				}
+			}
 		}
+
+
 	}
 
 	return 0;
