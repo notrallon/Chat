@@ -24,7 +24,7 @@ int main()
 
 		std::string bufferStr = buffer;
 
-		User* sendingUser;
+		User* sendingUser = nullptr;
 
 		if (connectedUsers.size() > 0) 
 		{
@@ -60,14 +60,14 @@ int main()
 		// Send an answer
 		std::stringstream mstream;
 		mstream.clear();
-		if (!bufferStr.empty()) {
+		if (!bufferStr.empty() && sendingUser != nullptr) {
 			mstream << sendingUser->GetName() << " said: " << buffer << std::endl;
 			std::string message = mstream.str();
 
 			std::cout << message;
 			for (int i = 0; i < connectedUsers.size(); i++)
 			{
-				if (!message.empty())
+				if (!message.empty() && (connectedUsers[i]->GetAdress() != sender && connectedUsers[i]->GetPort() != port))
 					socket.send(message.c_str(), message.size() + 1, connectedUsers[i]->GetAdress(), connectedUsers[i]->GetPort());
 			}
 		}

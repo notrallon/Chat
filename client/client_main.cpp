@@ -6,7 +6,6 @@
 #include <string>
 
 sf::UdpSocket socket;
-bool receiving = false;
 
 void ReceiveMessage() 
 {
@@ -37,15 +36,11 @@ int main()
 
 	std::string messageAdder;
 
-	bool pressed = false;
-
 	std::thread receive(ReceiveMessage);
 	while (true) 
 	{
 		std::getline(std::cin, messageAdder);
 		socket.send(messageAdder.c_str(), messageAdder.size() + 1, serverIP, 55002);
-		pressed = true;
-			
 	}
 
 	return 0;
