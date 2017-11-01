@@ -1,6 +1,9 @@
 #include <iostream>
 #include <sstream>
 #include <SFML/Network.hpp>
+#include <SFML/System.hpp>
+
+#include "User.h"
 
 int main() 
 {
@@ -9,7 +12,7 @@ int main()
 	sf::UdpSocket socket;
 	socket.bind(55002);
 
-	std::vector<sf::IpAddress> connectedIPs;
+	std::vector<User*> connectedUsers;
 
 	while (true) {
 		// Receive a message from anyone
@@ -19,37 +22,63 @@ int main()
 		unsigned short port;
 		socket.receive(buffer, sizeof(buffer), received, sender, port);
 
-		if (connectedIPs.size() > 0) 
+		std::string bufferStr = buffer;
+
+		User* sendingUser;
+
+		if (connectedUsers.size() > 0) 
 		{
-			for (int i = 0; i < connectedIPs.size(); i++) 
+			for (int i = 0; i < connectedUsers.size(); i++)
 			{
-				if (connectedIPs[i] == sender) 
+				if (connectedUsers[i]->GetAdress() == sender && connectedUsers[i]->GetPort() == port)
 				{
+					sendingUser = connectedUsers[i];
 					break;
 				}
-				else if (i == connectedIPs.size() - 1) 
+				else if (i == connectedUsers.size() - 1)
 				{
-					connectedIPs.push_back(sender);
+					User* newUser = new User();
+					newUser->SetAdress(sender);
+					newUser->SetPort(port);
+					newUser->SetName("Anon" + std::to_string(connectedUsers.size() + 1));
+					connectedUsers.push_back(newUser);
+					sendingUser = newUser;
 				}
 			}
 		}
 		else 
 		{
-			connectedIPs.push_back(sender);
+			User* newUser = new User();
+			newUser->SetAdress(sender);
+			newUser->SetPort(port);
+			newUser->SetName("Anon1");
+			connectedUsers.push_back(newUser);
+			sendingUser = newUser;
 		}
 
-		std::cout << sender.toString() << " said: " << buffer << std::endl;
 
 		// Send an answer
 		std::stringstream mstream;
-		mstream << sender.toString() << " said: " << buffer << std::endl;
-		std::string message = mstream.str();
+		mstream.clear();
+		if (!bufferStr.empty()) {
+			mstream << sendingUser->GetName() << " said: " << buffer << std::endl;
+			std::string message = mstream.str();
 
-		for (int i = 0; i < connectedIPs.size(); i++) 
-		{
-			socket.send(message.c_str(), message.size() + 1, connectedIPs[i], port);
+			std::cout << message;
+			for (int i = 0; i < connectedUsers.size(); i++)
+			{
+				if (!message.empty())
+					socket.send(message.c_str(), message.size() + 1, connectedUsers[i]->GetAdress(), connectedUsers[i]->GetPort());
+			}
 		}
 	}
+
+	for (auto it : connectedUsers) {
+		delete it;
+		it = nullptr;
+	}
+
+	connectedUsers.clear();
 
 	return 0;
 }
