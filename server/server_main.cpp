@@ -2,8 +2,20 @@
 #include <sstream>
 #include <SFML/Network.hpp>
 #include "User.h"
+#include "HistoryLog.h"
 
 int main() 
+{
+	HistoryLog asdf;
+
+	asdf.CreateFile("hejyay");
+	
+	//lazyfunction();
+
+	return 0;
+}
+
+void lazyfunction()
 {
 	std::vector<User*> users;
 
@@ -17,7 +29,7 @@ int main()
 
 	std::vector<sf::IpAddress> connectedIPs;
 
-	while (true) { 
+	while (true) {
 		// Receive a message from anyone
 		char buffer[1024];
 		std::size_t received = 0;
@@ -26,25 +38,25 @@ int main()
 		socket.receive(buffer, sizeof(buffer), received, sender, port);
 
 		users.push_back(new User());
-		users[users.size()-1]->SetAdress(sender.toString());
-		users[users.size()-1]->SetName("User[" + std::to_string(users.size()) + "]");
+		users[users.size() - 1]->SetAdress(sender.toString());
+		users[users.size() - 1]->SetName("User[" + std::to_string(users.size()) + "]");
 
 
-		if (connectedIPs.size() > 0) 
+		if (connectedIPs.size() > 0)
 		{
-			for (int i = 0; i < connectedIPs.size(); i++) 
+			for (int i = 0; i < connectedIPs.size(); i++)
 			{
-				if (connectedIPs[i] == sender) 
+				if (connectedIPs[i] == sender)
 				{
 					break;
 				}
-				else if (i == connectedIPs.size() - 1) 
+				else if (i == connectedIPs.size() - 1)
 				{
 					connectedIPs.push_back(sender);
 				}
 			}
 		}
-		else 
+		else
 		{
 			connectedIPs.push_back(sender);
 		}
@@ -71,5 +83,4 @@ int main()
 
 	}
 
-	return 0;
 }
