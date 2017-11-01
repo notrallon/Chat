@@ -17,7 +17,7 @@ int main()
 
 	std::vector<sf::IpAddress> connectedIPs;
 
-	while (true) {
+	while (true) { 
 		// Receive a message from anyone
 		char buffer[1024];
 		std::size_t received = 0;
