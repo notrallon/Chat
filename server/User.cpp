@@ -37,3 +37,9 @@ void User::SetPort(const uShort& port)
 {
 	m_Port = port;
 }
+
+const std::string& User::UserInfo()
+{
+	m_UserInfo = std::string("[" + m_Adress.toString() + ":" + std::to_string(m_Port) + "]" + "[" + "Name:" + m_Username + "]");
+	return m_UserInfo;
+}
