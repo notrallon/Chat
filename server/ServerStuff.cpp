@@ -45,7 +45,9 @@ void ServerStuff::AllServerStuff()
 			mstream << sendingUser->GetName() << " said: " << buffer << std::endl;
 			std::string message = mstream.str();
 
-			std::cout << message;
+			//Prints timestamp and message to server console
+			std::cout << "[" << sm_historyLog.GetTimeStamp() << "]" << message << std::endl;
+
 			for (int i = 0; i < m_connectedUsers.size(); i++)
 			{
 				//Edit Note: Removed ->GetAdress and replaced it with ->GetName (replacing sender with sendingUser)		<-REMOVE THIS COMMENT<-

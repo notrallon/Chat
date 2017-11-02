@@ -32,14 +32,16 @@ int main()
 	std::string serverIP = sf::IpAddress::getLocalAddress().toString();
 	
 	std::cout << "What's the IP you would like to connect to?";
-	std::cin >> serverIP;
+	std::getline(std::cin, serverIP);
 
-	std::string messageAdder;
+	std::string messageAdder = "";
 
 	std::thread receive(ReceiveMessage);
 	while (true) 
 	{
+		messageAdder = ""; //Extra precaution
 		std::getline(std::cin, messageAdder);
+		if(messageAdder != "") //wont send messages if they dont have anything in them
 		socket.send(messageAdder.c_str(), messageAdder.size() + 1, serverIP, 55002);
 	}
 

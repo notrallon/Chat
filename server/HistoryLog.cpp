@@ -33,7 +33,6 @@ const std::string HistoryLog::GetTimeStamp() const
 	timeinfo = localtime(&rawtime);
 
 	strftime(buffer, 80, "%F %X", timeinfo);
-	puts(buffer); //<- dunno what this does
 
 	timeResult = buffer;
 	//return our string. our timestamp
