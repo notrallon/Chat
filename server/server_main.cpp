@@ -5,7 +5,7 @@
 
 #include "User.h"
 
-int main() 
+int main()
 {
 	// ----- The server -----
 	// Create a socket and bind it to the port 55002
@@ -26,32 +26,16 @@ int main()
 
 		User* sendingUser = nullptr;
 
-		if (connectedUsers.size() > 0) 
+		if (connectedUsers.size() > 0)
 		{
 			for (int i = 0; i < connectedUsers.size(); i++)
 			{
 				if (connectedUsers[i]->GetAdress() == sender && connectedUsers[i]->GetPort() == port)
-=======
-		users.push_back(new User());
-		users[users.size() - 1]->SetAdress(sender.toString());
-		users[users.size() - 1]->SetName("User[" + std::to_string(users.size()) + "]");
-
-
-		if (connectedIPs.size() > 0)
-		{
-			for (int i = 0; i < connectedIPs.size(); i++)
-			{
-				if (connectedIPs[i] == sender)
->>>>>>> e3eba0705abdf2d130df52e57923c15646b91154
 				{
 					sendingUser = connectedUsers[i];
 					break;
 				}
-<<<<<<< HEAD
 				else if (i == connectedUsers.size() - 1)
-=======
-				else if (i == connectedIPs.size() - 1)
->>>>>>> e3eba0705abdf2d130df52e57923c15646b91154
 				{
 					User* newUser = new User();
 					newUser->SetAdress(sender);
@@ -72,7 +56,6 @@ int main()
 			sendingUser = newUser;
 		}
 
-<<<<<<< HEAD
 
 		// Send an answer
 		std::stringstream mstream;
@@ -86,31 +69,10 @@ int main()
 			{
 				if (!message.empty() && (connectedUsers[i]->GetAdress() != sender && connectedUsers[i]->GetPort() != port))
 					socket.send(message.c_str(), message.size() + 1, connectedUsers[i]->GetAdress(), connectedUsers[i]->GetPort());
-=======
-		std::cout << SERVER_SIDE << sender.toString() << " said: " << buffer << SERVER_SIDE_END << std::endl;
-
-
-		for (int i = 0; i < users.size(); i++)
-		{
-			if (users[i]->GetAdress() == sender.toString())
-			{
-				// Send an answer
-				std::stringstream mstream;
-				mstream << SERVER_SIDE << sender.toString() << " said: " << buffer << "... also: Hello " << users[i]->GetName() << SERVER_SIDE_END << std::endl;
-				std::string message = mstream.str();
-
-				for (int i = 0; i < connectedIPs.size(); i++)
-				{
-					socket.send(message.c_str(), message.size() + 1, connectedIPs[i], port);
-				}
->>>>>>> e3eba0705abdf2d130df52e57923c15646b91154
 			}
 		}
-
-
 	}
 
-<<<<<<< HEAD
 	for (auto it : connectedUsers) {
 		delete it;
 		it = nullptr;
@@ -119,6 +81,4 @@ int main()
 	connectedUsers.clear();
 
 	return 0;
-=======
->>>>>>> e3eba0705abdf2d130df52e57923c15646b91154
 }
