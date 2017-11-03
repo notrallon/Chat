@@ -1,9 +1,5 @@
-#include <iostream>
-#include <SFML/Network.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
-#include <thread>
-#include <string>
+
+#include "ChatWindow.h"
 
 sf::UdpSocket socket;
 
@@ -24,25 +20,18 @@ void ReceiveMessage()
 
 int main() 
 {
-	// ----- The client -----
-	// Create a socket and bind it to the port 55001
-	socket.bind(socket.AnyPort);
+	ChatWindow chatwindow;
 
-	// Send a message to 192.168.1.50 on port 55002
-	std::string serverIP = sf::IpAddress::getLocalAddress().toString();
+	std::string str = "asdf";
 	
-	std::cout << "What's the IP you would like to connect to?";
-	std::getline(std::cin, serverIP);
-
-	std::string messageAdder = "";
-
-	std::thread receive(ReceiveMessage);
-	while (true) 
+	while (true)
 	{
-		messageAdder = ""; //Extra precaution
-		std::getline(std::cin, messageAdder);
-		if(messageAdder != "") //wont send messages if they dont have anything in them
-		socket.send(messageAdder.c_str(), messageAdder.size() + 1, serverIP, 55002);
+		chatwindow.render();
+		chatwindow.add_string(str);
+
+		str += str;
+
+		
 	}
 
 	return 0;
