@@ -15,7 +15,7 @@ public:
 	//Filename always includes ".txt" at the end. (dont type filetype).
 	//A time stamp is set with every message given.
 	//Messages are appended (added at the end of the file).
-	void				AddTextLog		(const std::string filename, const std::string message);
+	void				AddTextLog		(const std::string filename, const std::string& message);
 
 private:
 	

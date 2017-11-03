@@ -9,7 +9,7 @@ HistoryLog::~HistoryLog()
 {
 }
 
-void HistoryLog::AddTextLog(const std::string filename, const std::string message)
+void HistoryLog::AddTextLog(const std::string filename, const std::string& message)
 {
 	std::ofstream outfile;
 

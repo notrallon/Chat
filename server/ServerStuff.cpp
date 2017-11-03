@@ -31,10 +31,10 @@ void ServerStuff::AllServerStuff()
 
 		CreateUser(sender, port, sendingUser);
 
-		std::string* logMessage	= new std::string(buffer);
-		std::string* logFull	= new std::string(sendingUser->UserInfo() + "[Message:" + *logMessage + "]");
+		std::string logMessage	= std::string(buffer);
+		std::string logFull	= std::string(sendingUser->UserInfo() + "[Message:" + logMessage + "]");
 
-		sm_historyLog.AddTextLog("ServerReceived", *logFull);
+		sm_historyLog.AddTextLog("ServerReceived", logFull);
 
 		std::string bufferStr = buffer;
 
@@ -88,8 +88,8 @@ void ServerStuff::CreateUser(const sf::IpAddress sender, const unsigned short po
 				newUser->SetName("Anon" + std::to_string(m_connectedUsers.size() + 1));
 				m_connectedUsers.push_back(newUser);
 
-				std::string* tempUserInfo = new std::string(newUser->UserInfo());
-				sm_historyLog.AddTextLog("Users", *tempUserInfo);
+				std::string tempUserInfo = std::string(newUser->UserInfo());
+				sm_historyLog.AddTextLog("Users", tempUserInfo);
 
 				sendingUser = newUser;
 			}
@@ -104,8 +104,8 @@ void ServerStuff::CreateUser(const sf::IpAddress sender, const unsigned short po
 		newUser->SetName("Anon1");
 		m_connectedUsers.push_back(newUser);
 
-		std::string* tempUserInfo = new std::string(newUser->UserInfo());
-		sm_historyLog.AddTextLog("Users", *tempUserInfo);
+		std::string tempUserInfo = std::string(newUser->UserInfo());
+		sm_historyLog.AddTextLog("Users", tempUserInfo);
 
 		sendingUser = newUser;
 	}
