@@ -21,23 +21,14 @@ void Client::Run()
 
 	std::getline(std::cin, serverIP);
 
-	HANDLE h;
-	COORD coord;
-	
-	h = GetStdHandle(STD_OUTPUT_HANDLE);
-	coord.X = 10;
-	coord.Y = 10;
-
-
 	std::cout << "Hello, what's your name?\n";
 	std::cin >> m_Name;
 
 	std::string messageAdder = "";
 
-	std::thread receive(ReceiveMessage, std::ref(m_Socket));
+	std::thread receive(ReceiveMessage, m_Socket);
 	while (true)
 	{
-		SetConsoleCursorPosition(h, coord);
 		messageAdder = ""; //Extra precaution
 		std::getline(std::cin, messageAdder);
 		if (messageAdder != "") //wont send messages if they dont have anything in them
