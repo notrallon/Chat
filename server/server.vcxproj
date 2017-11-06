@@ -126,13 +126,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="HistoryLog.cpp" />
-    <ClCompile Include="ServerStuff.cpp" />
+    <ClCompile Include="Server.cpp" />
     <ClCompile Include="server_main.cpp" />
     <ClCompile Include="User.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HistoryLog.h" />
-    <ClInclude Include="ServerStuff.h" />
+    <ClInclude Include="Server.h" />
     <ClInclude Include="User.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

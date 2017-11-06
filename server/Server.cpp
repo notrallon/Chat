@@ -1,18 +1,21 @@
-#include "ServerStuff.h"
+#include "Server.h"
+#include <utility>
 
 
-HistoryLog ServerStuff::sm_historyLog;
+HistoryLog Server::sm_historyLog;
 
-ServerStuff::ServerStuff()
+Server::Server()
 {
+	m_Commands.emplace("setname", &ComFuncs::SetName);
+	m_Commands.emplace("sn", &ComFuncs::SetName);
 }
 
 
-ServerStuff::~ServerStuff()
+Server::~Server()
 {
 }
 
-void ServerStuff::AllServerStuff()
+void Server::Run()
 {
 	// ----- The server -----
 	// Create a socket and bind it to the port 55002
@@ -27,11 +30,23 @@ void ServerStuff::AllServerStuff()
 
 		m_socket.receive(buffer, sizeof(buffer), received, sender, port);
 
-		User* sendingUser = nullptr;
 
+		User* sendingUser = nullptr;
 		CreateUser(sender, port, sendingUser);
 
-		std::string logMessage	= std::string(buffer);
+		// TODO: Make commands work
+		/*if (buffer[0] == '/') 
+		{
+			// Example: /setname Richard <--- setname = command, Richard = value
+			// so result is command->second("Richard") -- Calls ComFuncs::SetName("Richard")
+			// TODO : Loop through the buffer until blankspace and save it into a string called "command"
+			auto command = m_Commands.find("command");
+
+			// Loop through next word in the buffer until a new blankspace and save it into a string called "value"
+			command->second("value", sendingUser);
+		}*/
+
+		std::string logMessage = std::string(buffer);
 		std::string logFull	= std::string(sendingUser->UserInfo() + "[Message:" + logMessage + "]");
 
 		sm_historyLog.AddTextLog("ServerReceived", logFull);
@@ -68,7 +83,7 @@ void ServerStuff::AllServerStuff()
 	m_connectedUsers.clear();
 }
 
-void ServerStuff::CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser)
+void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser)
 {
 	//if users exist
 	if (m_connectedUsers.size() > 0)

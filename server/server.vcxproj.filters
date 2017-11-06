@@ -24,7 +24,7 @@
     <ClCompile Include="HistoryLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ServerStuff.cpp">
+    <ClCompile Include="Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,7 +35,7 @@
     <ClInclude Include="HistoryLog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ServerStuff.h">
+    <ClInclude Include="Server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

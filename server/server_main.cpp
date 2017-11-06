@@ -1,15 +1,11 @@
-#include "ServerStuff.h"
+#include "Server.h"
 
 
 
 int main()
 {
-	ServerStuff server;
+	Server server;
+	server.Run();
 
-	server.AllServerStuff();
-
-
-
-	while (true);
 	return 0;
 }
