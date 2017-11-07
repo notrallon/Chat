@@ -6,8 +6,8 @@ HistoryLog Server::sm_historyLog;
 
 Server::Server()
 {
-	m_Commands.emplace("setname", &ComFuncs::SetName);
-	m_Commands.emplace("sn", &ComFuncs::SetName);
+	//m_Commands.emplace("setname", &ComFuncs::SetName);
+	//m_Commands.emplace("sn", &ComFuncs::SetName);
 }
 
 
@@ -66,11 +66,8 @@ void Server::Run()
 			for (int i = 0; i < m_connectedUsers.size(); i++)
 			{
 				//Edit Note: Removed ->GetAdress and replaced it with ->GetName (replacing sender with sendingUser)		<-REMOVE THIS COMMENT<-
-				if (!message.empty() && (m_connectedUsers[i]->GetName() != sendingUser->GetName() && m_connectedUsers[i]->GetPort() != port))
-				{
-					m_socket.send(message.c_str(), message.size() + 1, m_connectedUsers[i]->GetAdress(), m_connectedUsers[i]->GetPort());
-					sm_historyLog.AddTextLog("ServerSent", message);
-				}
+				m_socket.send(message.c_str(), message.size() + 1, m_connectedUsers[i]->GetAdress(), m_connectedUsers[i]->GetPort());
+				sm_historyLog.AddTextLog("ServerSent", message);
 			}
 		}
 	}

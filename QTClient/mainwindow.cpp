@@ -4,7 +4,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_SocketThread(nullptr)
 {
     ui->setupUi(this);
     InitClient();
@@ -12,7 +13,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    //delete m_Receive;
+    m_SocketThread->SetRunning(false);
+    m_SocketThread->quit();
+    while(!m_SocketThread->isFinished());
+    delete m_SocketThread;
     delete ui;
 }
 
@@ -28,16 +32,26 @@ void MainWindow::on_chatInput_returnPressed()
 
 void MainWindow::InitClient()
 {
-    m_Socket.bind();
+    //m_Socket.bind();
+    m_SocketThread = new SocketThread();
 
-    //m_Receive = new std::thread(ReceiveMessage, &m_Socket);
+    //m_SocketThread->SetSocket(&m_Socket);
+    m_SocketThread->SetChatbox(ui->chatOutput);
+
+    QObject::connect(m_SocketThread, SIGNAL(finished()), this, SLOT(quit()));
+    m_SocketThread->start();
 }
 
 void MainWindow::SendMessage()
 {
+    /*
     std::string buffer = ui->chatInput->text().toStdString();
     // Send message to server. Doesn't send any information about username atm.
-    //m_Socket.writeDatagram(buffer.c_str(), sizeof(buffer) + 1, QHostAddress(SERVER_ADRESS), 55002);
+    m_Socket.writeDatagram(buffer.c_str(), sizeof(buffer) + 1, QHostAddress(SERVER_ADRESS), 55002);
+    ui->chatInput->clear();
+    */
+    m_SocketThread->SendMessage(ui->chatInput->text());
+    ui->chatInput->clear();
 }
 
 void MainWindow::AppendChat(QString message)
@@ -46,7 +60,7 @@ void MainWindow::AppendChat(QString message)
 }
 
 //void MainWindow::ReceiveMessage(QUdpSocket &socket, Ui::MainWindow& ui)
-void MainWindow::ReceiveMessage(QUdpSocket* socket)
+/*void MainWindow::ReceiveMessage(QUdpSocket& socket, Ui::MainWindow* s_ui)
 {
     while (true)
     {
@@ -55,10 +69,10 @@ void MainWindow::ReceiveMessage(QUdpSocket* socket)
         quint16* port;
 
         // Wait for a message
-        //socket->waitForReadyRead();
-        //socket->readDatagram(buffer, sizeof(buffer), sender, port);
+        socket.waitForReadyRead();
+        socket.readDatagram(buffer, sizeof(buffer), sender, port);
 
         // Add the message to chat once received.
-       // ui.chatOutput->append(buffer);
+        s_ui->chatOutput->append(buffer);
     }
-}
+}*/

@@ -3,14 +3,16 @@
 
 #include <QMainWindow>
 #include <QtNetwork/QUdpSocket>
-#include <thread>
-#include <QThread>
 
-#define SERVER_ADRESS "10.96.108.42"
+#include "socketthread.h"
+
+#define SERVER_ADRESS "10.96.108.41"
 
 namespace Ui {
 class MainWindow;
 }
+
+
 
 class MainWindow : public QMainWindow
 {
@@ -27,16 +29,16 @@ private slots:
 
 private:
     Ui::MainWindow* ui;
-    QUdpSocket      m_Socket;
+    //QUdpSocket      m_Socket;
     QString         m_Name;
     QString         m_ServerAdress;
-    //std::thread*    m_Receive;
+    SocketThread*   m_SocketThread;
 
     void            InitClient();
     void            SendMessage();
     void            AppendChat(QString message);
 
-    static void     ReceiveMessage(QUdpSocket* socket);
+
 };
 
 

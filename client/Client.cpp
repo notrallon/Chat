@@ -26,7 +26,7 @@ void Client::Run()
 
 	std::string messageAdder = "";
 
-	std::thread receive(ReceiveMessage, m_Socket);
+	std::thread receive(ReceiveMessage, std::ref(m_Socket));
 	while (true)
 	{
 		messageAdder = ""; //Extra precaution
