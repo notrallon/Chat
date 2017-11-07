@@ -33,4 +33,5 @@ HEADERS += \
         socketthread.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    usernamewindow.ui

@@ -64,6 +64,9 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="separator"/>
+    <addaction name="actionSet_username"/>
+    <addaction name="actionConnect_to_IP"/>
    </widget>
    <addaction name="menuQT_Chat_Client"/>
   </widget>
@@ -76,6 +79,16 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionSet_username">
+   <property name="text">
+    <string>Set username</string>
+   </property>
+  </action>
+  <action name="actionConnect_to_IP">
+   <property name="text">
+    <string>Connect to IP</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

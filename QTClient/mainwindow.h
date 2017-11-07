@@ -27,6 +27,10 @@ private slots:
 
     void            on_chatInput_returnPressed();
 
+    void on_actionSet_username_triggered();
+
+    void on_actionConnect_to_IP_triggered();
+
 private:
     Ui::MainWindow* ui;
     //QUdpSocket      m_Socket;
@@ -36,6 +40,7 @@ private:
 
     void            InitClient();
     void            SendMessage();
+    void            SendMessage(QString);
     void            AppendChat(QString message);
 
 
