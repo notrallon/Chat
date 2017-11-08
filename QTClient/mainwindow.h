@@ -27,9 +27,9 @@ private slots:
 
     void            on_chatInput_returnPressed();
 
-    void on_actionSet_username_triggered();
+    void            on_actionSet_username_triggered();
 
-    void on_actionConnect_to_IP_triggered();
+    void            on_actionConnect_to_IP_triggered();
 
 private:
     Ui::MainWindow* ui;

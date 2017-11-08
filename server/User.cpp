@@ -44,3 +44,13 @@ const std::string& User::UserInfo()
 	return m_UserInfo;
 }
 
+const sf::Time& User::GetTime() const
+{
+	return m_Time;
+}
+
+void User::SetTime(sf::Time time)
+{
+	m_Time = time;
+}
+

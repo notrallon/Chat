@@ -22,10 +22,15 @@ public:
 
 	const std::string&		UserInfo();
 
+	const sf::Time&			GetTime() const;
+	void					SetTime(sf::Time time);
+
 private:
 	std::string				m_Username;
 	sf::IpAddress			m_Adress;
 	uShort					m_Port;
+
+	sf::Time				m_Time;
 
 	std::string				m_UserInfo;
 };

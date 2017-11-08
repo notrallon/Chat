@@ -28,13 +28,13 @@ private:
 
 	void CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser);
 	void DisconnectUser(User* user);
+	void WhisperUser(User* sender, std::string buffer);
+	void ChangeUsername(User* sender, std::string buffer);
+
+	void SendToAll(std::string message);
+
+	void CheckUsersConnected(sf::Time time);
 };
 
-
-struct ComFuncs
-{
-	static void SetName(std::string buffer, User* user, Server* server) { if (!buffer.empty()) { user->SetName(buffer); } }
-	static void Disconnect(std::string buffer, User* user, Server* server) { server->DisconnectUser(user); }
-};
 
 

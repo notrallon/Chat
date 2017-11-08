@@ -3,6 +3,7 @@
 #include <thread>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -46,12 +47,6 @@ void MainWindow::InitClient()
 
 void MainWindow::SendMessage()
 {
-    /*
-    std::string buffer = ui->chatInput->text().toStdString();
-    // Send message to server. Doesn't send any information about username atm.
-    m_Socket.writeDatagram(buffer.c_str(), sizeof(buffer) + 1, QHostAddress(SERVER_ADRESS), 55002);
-    ui->chatInput->clear();
-    */
     m_SocketThread->SendMessage(ui->chatInput->text());
     ui->chatInput->clear();
 }
@@ -65,24 +60,6 @@ void MainWindow::AppendChat(QString message)
 {
     ui->chatOutput->append(message);
 }
-
-//void MainWindow::ReceiveMessage(QUdpSocket &socket, Ui::MainWindow& ui)
-/*void MainWindow::ReceiveMessage(QUdpSocket& socket, Ui::MainWindow* s_ui)
-{
-    while (true)
-    {
-        char buffer[1024];
-        QHostAddress* sender;
-        quint16* port;
-
-        // Wait for a message
-        socket.waitForReadyRead();
-        socket.readDatagram(buffer, sizeof(buffer), sender, port);
-
-        // Add the message to chat once received.
-        s_ui->chatOutput->append(buffer);
-    }
-}*/
 
 void MainWindow::on_actionSet_username_triggered()
 {

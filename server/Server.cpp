@@ -1,5 +1,7 @@
 #include "Server.h"
+#include "ComFuncs.h"
 #include <utility>
+#include <algorithm>
 
 
 HistoryLog Server::sm_historyLog;
@@ -9,6 +11,8 @@ Server::Server()
 	m_Commands.emplace("setname", &ComFuncs::SetName);
 	m_Commands.emplace("sn", &ComFuncs::SetName);
 	m_Commands.emplace("disconnect", &ComFuncs::Disconnect);
+	m_Commands.emplace("w", &ComFuncs::Whisper);
+	m_Commands.emplace("whisper", &ComFuncs::Whisper);
 }
 
 
@@ -22,6 +26,11 @@ void Server::Run()
 	// Create a socket and bind it to the port 55002
 	m_socket.bind(55002);
 
+	sf::Clock clock;
+	sf::Time time;
+
+	clock.restart();
+
 	while (true) {
 		// Receive a message from anyone
 		char buffer[1024];
@@ -31,10 +40,13 @@ void Server::Run()
 
 		m_socket.receive(buffer, sizeof(buffer), received, sender, port);
 
-
 		User* sendingUser = nullptr;
 		std::string bufferStr = buffer;
 		CreateUser(sender, port, sendingUser);
+
+		time = clock.getElapsedTime();
+		sendingUser->SetTime(time);
+		CheckUsersConnected(time);
 
 		//w Name MEssage bla bla bla
 
@@ -49,26 +61,6 @@ void Server::Run()
 				continue;
 			}
 			std::string commandValue = bufferStr.substr(spacePosition + 1);
-
-
-
-		//	std::string command = "";
-			/*for (int i = 1; i < sizeof(buffer); i++)
-			{
-				if (buffer[i] == ' ')
-				{
-					for (int j = i + 1; j < sizeof(buffer); j++) 
-					{
-						if (buffer[j] == ' ')
-						{
-							break; // j
-						}
-						commandValue += buffer[j];
-					}
-					break; // i
-				}
-				command += buffer[i];
-			}*/
 
 			// Example: /setname Richard <--- setname = command, Richard = value
 			// so result is command->second("Richard") -- Calls ComFuncs::SetName("Richard")
@@ -101,18 +93,13 @@ void Server::Run()
 		std::stringstream mstream;
 		mstream.clear();
 		if (!bufferStr.empty() && sendingUser != nullptr) {
-			mstream << sendingUser->GetName() << " said: " << buffer << std::endl;
-			std::string message = mstream.str();
+			mstream << sendingUser->GetName() << " said: " << buffer;
+			std::string message = "<b>" + sendingUser->GetName() + " said:</b> " + buffer;
 
 			//Prints timestamp and message to server console
 			std::cout << "[" << sm_historyLog.GetTimeStamp() << "]" << message << std::endl;
 
-			for (int i = 0; i < m_connectedUsers.size(); i++)
-			{
-				//Edit Note: Removed ->GetAdress and replaced it with ->GetName (replacing sender with sendingUser)		<-REMOVE THIS COMMENT<-
-				m_socket.send(message.c_str(), message.size() + 1, m_connectedUsers[i]->GetAdress(), m_connectedUsers[i]->GetPort());
-				sm_historyLog.AddTextLog("ServerSent", message);
-			}
+			SendToAll(message);
 		}
 	}
 
@@ -177,10 +164,85 @@ void Server::DisconnectUser(User * user)
 		{
 			delete *it;
 			it = m_connectedUsers.erase(it);
+			break;
 		}
 		else
 		{
 			it++;
+		}
+	}
+}
+
+void Server::WhisperUser(User* sender, std::string buffer)
+{
+	size_t spacePosition = buffer.find(' ');
+	std::string targetUsername = buffer.substr(0, spacePosition);
+	std::transform(targetUsername.begin(), targetUsername.end(), targetUsername.begin(), ::tolower);
+
+	std::string message = "<font color='#800000ff'><b>Whisper from " + sender->GetName() + ":</b> " + buffer.substr(spacePosition + 1) + "</color>";
+
+	for (int i = 0; i < m_connectedUsers.size(); i++)
+	{
+		std::string currentUsername = m_connectedUsers[i]->GetName();
+		std::transform(currentUsername.begin(), currentUsername.end(), currentUsername.begin(), ::tolower);
+		if (targetUsername == currentUsername)
+		{
+			m_socket.send(message.c_str(), message.size() + 1, m_connectedUsers[i]->GetAdress(), m_connectedUsers[i]->GetPort());
+			sm_historyLog.AddTextLog("ServerSent", message);
+		}
+	}
+
+	// Let sender know he whispered
+	message = "<font color='#800000ff'><b>Whisper to " + targetUsername + ":</b> " + buffer.substr(spacePosition + 1) + "</color>";
+	m_socket.send(message.c_str(), message.size() + 1, sender->GetAdress(), sender->GetPort());
+}
+
+void Server::ChangeUsername(User * sender, std::string buffer)
+{
+	// Make sure usernames can't have spaces
+	size_t spacepos = buffer.find(' ');
+	buffer = buffer.substr(0, spacepos);
+
+
+	// If the string isn't empty by now we set the new name of the user
+	if (buffer.empty())
+	{
+		std::string message = "Error! Could not change username. Field is empty.";
+		m_socket.send(message.c_str(), message.size() + 1, sender->GetAdress(), sender->GetPort());
+		return;
+	}
+	// Notify all users that a user changed name.
+	std::string message = sender->GetName() + " changed name to " + buffer;
+	SendToAll(message);
+
+	sender->SetName(buffer);
+}
+
+void Server::SendToAll(std::string message)
+{
+	if (message.empty())
+	{
+		return;
+	}
+
+	for (int i = 0; i < m_connectedUsers.size(); i++)
+	{
+		m_socket.send(message.c_str(), message.size() + 1, m_connectedUsers[i]->GetAdress(), m_connectedUsers[i]->GetPort());
+		sm_historyLog.AddTextLog("ServerSent", message);
+	}
+}
+
+void Server::CheckUsersConnected(sf::Time time)
+{
+	for (int i = 0; i < m_connectedUsers.size(); i++)
+	{
+		float timediff = time.asSeconds() - m_connectedUsers[i]->GetTime().asSeconds();
+		if (timediff > 10)
+		{
+			SendToAll("User timed out: " + m_connectedUsers[i]->GetName());
+			std::cout << "User timed out: " << m_connectedUsers[i]->GetName() << std::endl;
+			DisconnectUser(m_connectedUsers[i]);
+			i--;
 		}
 	}
 }

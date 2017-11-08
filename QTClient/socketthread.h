@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QTextEdit>
 #include <QtNetwork/QUdpSocket>
+#include <Qtime>
 
 class SocketThread : public QThread
 {
@@ -20,6 +21,7 @@ private:
     QTextEdit*  m_Chatbox;
     bool        m_Running;
     QString     m_ServerAdress;
+    QTime       m_Time;
 
 
     void run();
