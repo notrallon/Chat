@@ -3,7 +3,6 @@
 #include <utility>
 #include <algorithm>
 
-
 HistoryLog Server::sm_historyLog;
 
 Server::Server()
@@ -14,7 +13,6 @@ Server::Server()
 	m_Commands.emplace("w", &ComFuncs::Whisper);
 	m_Commands.emplace("whisper", &ComFuncs::Whisper);
 }
-
 
 Server::~Server()
 {

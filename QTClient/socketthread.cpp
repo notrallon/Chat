@@ -1,5 +1,6 @@
 #include "socketthread.h"
 #include <QtNetwork/QHostAddress>
+#include <QScrollBar>
 
 
 #define SERVER_ADRESS "10.96.108.57"
@@ -64,4 +65,6 @@ void SocketThread::SendMessage(QString message)
 void SocketThread::PrintToChat(QString message)
 {
     m_Chatbox->append(message);
+    m_Chatbox->textCursor().movePosition(QTextCursor::End);
+    m_Chatbox->ensureCursorVisible();
 }

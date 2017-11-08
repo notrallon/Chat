@@ -26,14 +26,14 @@ private:
 	std::vector<User*>	m_connectedUsers;
 	CommandMap			m_Commands;
 
-	void CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser);
-	void DisconnectUser(User* user);
-	void WhisperUser(User* sender, std::string buffer);
-	void ChangeUsername(User* sender, std::string buffer);
+	void				CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser);
+	void				DisconnectUser(User* user);
+	void				WhisperUser(User* sender, std::string buffer);
+	void				ChangeUsername(User* sender, std::string buffer);
 
-	void SendToAll(std::string message);
+	void				SendToAll(std::string message);
 
-	void CheckUsersConnected(sf::Time time);
+	void				CheckUsersConnected(sf::Time time);
 };
 
 
