@@ -26,11 +26,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-        socketthread.cpp
+        socketthread.cpp \
+        comfuncs.cpp
 
 HEADERS += \
         mainwindow.h \
-        socketthread.h
+        socketthread.h \
+        comfuncs.h
 
 FORMS += \
         mainwindow.ui \

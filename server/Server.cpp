@@ -40,13 +40,16 @@ void Server::Run()
 
 		User* sendingUser = nullptr;
 		std::string bufferStr = buffer;
-		CreateUser(sender, port, sendingUser);
+
+		size_t spacePos = bufferStr.find(' ');
+		std::string username = bufferStr.substr(0, spacePos);
+		bufferStr = bufferStr.substr(spacePos + 1);
+		
+		CreateUser(sender, port, sendingUser, username);
 
 		time = clock.getElapsedTime();
 		sendingUser->SetTime(time);
 		CheckUsersConnected(time);
-
-		//w Name MEssage bla bla bla
 
 		// TODO: Make commands work
 		if (bufferStr[0] == '/') 
@@ -75,6 +78,7 @@ void Server::Run()
 				std::string message = "Executing user command: /" + command + " " + commandValue;
 				std::cout << message << std::endl;
 				auto commandFunc = m_Commands.find(command);
+				//m_Commands.find(command)->second(commandValue, sendingUser, this);
 				// Loop through next word in the buffer until a new blankspace and save it into a string called "value"
 				commandFunc->second(commandValue, sendingUser, this);
 				continue;
@@ -91,8 +95,8 @@ void Server::Run()
 		std::stringstream mstream;
 		mstream.clear();
 		if (!bufferStr.empty() && sendingUser != nullptr) {
-			mstream << sendingUser->GetName() << " said: " << buffer;
-			std::string message = "<b>" + sendingUser->GetName() + " said:</b> " + buffer;
+			mstream << sendingUser->GetName() << " said: " << bufferStr;
+			std::string message = "<b>" + sendingUser->GetName() + " said:</b> " + bufferStr;
 
 			//Prints timestamp and message to server console
 			std::cout << "[" << sm_historyLog.GetTimeStamp() << "]" << message << std::endl;
@@ -101,42 +105,54 @@ void Server::Run()
 		}
 	}
 
-	for (auto it : m_connectedUsers) {
-		delete it;
-		it = nullptr;
+	for (auto it : m_Users) {
+		delete it.second;
+		it.second = nullptr;
 	}
 
-	m_connectedUsers.clear();
+	m_Users.clear();
 }
 
 void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser)
 {
-	//if users exist
-	if (m_connectedUsers.size() > 0)
+
+	if (m_Users.find("username") != m_Users.end())
 	{
-		for (int i = 0; i < m_connectedUsers.size(); i++)
+		// user = m_Users.find(username)->second;
+		// return;
+	}
+
+	// else create a new user
+
+
+	//if users exist
+	if (m_Users.size() > 0)
+	{
+		for (auto it = m_Users.begin(); it != m_Users.end(); it++)
 		{
+			User* user = it->second;
 			//if it is the user sending the message. sendingUser is the user
-			if (m_connectedUsers[i]->GetAdress() == sender && m_connectedUsers[i]->GetPort() == port)
+			if (user->GetAdress() == sender && user->GetPort() == port)
 			{
-				sendingUser = m_connectedUsers[i];
-				break;
-			}
-			//if no user was the sender. Create new user
-			else if (i == m_connectedUsers.size() - 1)
-			{
-				User* newUser = new User();
-				newUser->SetAdress(sender);
-				newUser->SetPort(port);
-				newUser->SetName("Anon" + std::to_string(m_connectedUsers.size() + 1));
-				m_connectedUsers.push_back(newUser);
-
-				std::string tempUserInfo = std::string(newUser->UserInfo());
-				sm_historyLog.AddTextLog("Users", tempUserInfo);
-
-				sendingUser = newUser;
+				sendingUser = user;
+				return;
 			}
 		}
+
+		User* newUser = new User();
+		newUser->SetAdress(sender);
+		newUser->SetPort(port);
+		newUser->SetName("Anon" + std::to_string(m_Users.size() + 1));
+		std::string username = newUser->GetName();
+		std::transform(username.begin(), username.end(), username.begin(), ::tolower);
+
+		m_Users.emplace(username, newUser);
+
+		std::string tempUserInfo = std::string(newUser->UserInfo());
+		sm_historyLog.AddTextLog("Users", tempUserInfo);
+
+		sendingUser = newUser;
+		return;
 	}
 	//if no user exists
 	else
@@ -145,23 +161,52 @@ void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, U
 		newUser->SetAdress(sender);
 		newUser->SetPort(port);
 		newUser->SetName("Anon1");
-		m_connectedUsers.push_back(newUser);
+		std::string username = newUser->GetName();
+		std::transform(username.begin(), username.end(), username.begin(), ::tolower);
+
+		m_Users.emplace(username, newUser);
 
 		std::string tempUserInfo = std::string(newUser->UserInfo());
 		sm_historyLog.AddTextLog("Users", tempUserInfo);
 
 		sendingUser = newUser;
+		return;
 	}
+}
+
+void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, User *& sendingUser, std::string username)
+{
+	std::string userLowercase = username;
+	std::transform(userLowercase.begin(), userLowercase.end(), userLowercase.begin(), ::tolower);
+	if (m_Users.find(userLowercase) != m_Users.end())
+	{
+		sendingUser = m_Users.find(userLowercase)->second;
+		return;
+	}
+
+	User* newUser = new User();
+	newUser->SetAdress(sender);
+	newUser->SetPort(port);
+	newUser->SetName(username);
+	
+
+	m_Users.emplace(userLowercase, newUser);
+
+	std::string tempUserInfo = std::string(newUser->UserInfo());
+	sm_historyLog.AddTextLog("Users", tempUserInfo);
+
+	sendingUser = newUser;
+	return;
 }
 
 void Server::DisconnectUser(User * user)
 {
-	for (auto it = m_connectedUsers.begin(); it != m_connectedUsers.end(); ) 
+	for (auto it = m_Users.begin(); it != m_Users.end(); ) 
 	{
-		if (*it == user)
+		if (it->second == user)
 		{
-			delete *it;
-			it = m_connectedUsers.erase(it);
+			delete it->second;
+			it = m_Users.erase(it);
 			break;
 		}
 		else
@@ -177,18 +222,19 @@ void Server::WhisperUser(User* sender, std::string buffer)
 	std::string targetUsername = buffer.substr(0, spacePosition);
 	std::transform(targetUsername.begin(), targetUsername.end(), targetUsername.begin(), ::tolower);
 
+	if (m_Users.find(targetUsername) == m_Users.end())
+	{
+		std::string message = "Could not find user with name " + targetUsername;
+		m_socket.send(message.c_str(), message.size() + 1, sender->GetAdress(), sender->GetPort());
+		return;
+	}
+	
 	std::string message = "<font color='#800000ff'><b>Whisper from " + sender->GetName() + ":</b> " + buffer.substr(spacePosition + 1) + "</color>";
 
-	for (int i = 0; i < m_connectedUsers.size(); i++)
-	{
-		std::string currentUsername = m_connectedUsers[i]->GetName();
-		std::transform(currentUsername.begin(), currentUsername.end(), currentUsername.begin(), ::tolower);
-		if (targetUsername == currentUsername)
-		{
-			m_socket.send(message.c_str(), message.size() + 1, m_connectedUsers[i]->GetAdress(), m_connectedUsers[i]->GetPort());
-			sm_historyLog.AddTextLog("ServerSent", message);
-		}
-	}
+
+	User* targetUser = m_Users.find(targetUsername)->second;
+	m_socket.send(message.c_str(), message.size() + 1, targetUser->GetAdress(), targetUser->GetPort());
+	sm_historyLog.AddTextLog("ServerSent", message);
 
 	// Let sender know he whispered
 	message = "<font color='#800000ff'><b>Whisper to " + targetUsername + ":</b> " + buffer.substr(spacePosition + 1) + "</color>";
@@ -210,10 +256,21 @@ void Server::ChangeUsername(User * sender, std::string buffer)
 		return;
 	}
 	// Notify all users that a user changed name.
-	std::string message = sender->GetName() + " changed name to " + buffer;
+	std::string oldName = sender->GetName();
+	std::string message = oldName + " changed name to " + buffer;
 	SendToAll(message);
 
+	// Send a command to the client to confirm it can change username
+	message = "/setname " + buffer;
 	sender->SetName(buffer);
+	m_socket.send(message.c_str(), message.length() + 1, sender->GetAdress(), sender->GetPort());
+
+	// Make old and new name lowercase so we can find and emplace
+	std::transform(oldName.begin(), oldName.end(), oldName.begin(), ::tolower);
+	std::transform(buffer.begin(), buffer.end(), buffer.begin(), ::tolower);
+	
+	m_Users.emplace(buffer, sender);
+	m_Users.erase(oldName);
 }
 
 void Server::SendToAll(std::string message)
@@ -223,24 +280,23 @@ void Server::SendToAll(std::string message)
 		return;
 	}
 
-	for (int i = 0; i < m_connectedUsers.size(); i++)
+	for (auto it : m_Users)
 	{
-		m_socket.send(message.c_str(), message.size() + 1, m_connectedUsers[i]->GetAdress(), m_connectedUsers[i]->GetPort());
+		m_socket.send(message.c_str(), message.size() + 1, it.second->GetAdress(), it.second->GetPort());
 		sm_historyLog.AddTextLog("ServerSent", message);
 	}
 }
 
 void Server::CheckUsersConnected(sf::Time time)
 {
-	for (int i = 0; i < m_connectedUsers.size(); i++)
+	for (auto it : m_Users)
 	{
-		float timediff = time.asSeconds() - m_connectedUsers[i]->GetTime().asSeconds();
+		float timediff = time.asSeconds() - it.second->GetTime().asSeconds();
 		if (timediff > 10)
 		{
-			SendToAll("User timed out: " + m_connectedUsers[i]->GetName());
-			std::cout << "User timed out: " << m_connectedUsers[i]->GetName() << std::endl;
-			DisconnectUser(m_connectedUsers[i]);
-			i--;
+			SendToAll("User timed out: " + it.second->GetName());
+			std::cout << "User timed out: " << it.second->GetName() << std::endl;
+			DisconnectUser(it.second);
 		}
 	}
 }
