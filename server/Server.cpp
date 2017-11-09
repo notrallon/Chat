@@ -4,14 +4,16 @@
 #include <algorithm>
 
 HistoryLog Server::sm_historyLog;
+static std::vector<std::string> s_commandsStrings;
 
 Server::Server()
 {
-	m_Commands.emplace("setname", &ComFuncs::SetName);
-	m_Commands.emplace("sn", &ComFuncs::SetName);
-	m_Commands.emplace("disconnect", &ComFuncs::Disconnect);
-	m_Commands.emplace("w", &ComFuncs::Whisper);
-	m_Commands.emplace("whisper", &ComFuncs::Whisper);
+	m_ValueCommands.emplace		("setname",			std::make_pair(&ComFuncs::SetName,		"Set your username."));
+	m_ValueCommands.emplace		("sn",				std::make_pair(&ComFuncs::SetName,		"Set your username."));
+	m_Commands.emplace			("disconnect",			std::make_pair(&ComFuncs::Disconnect,	"Disconnect from the server."));
+	m_ValueCommands.emplace		("w",				std::make_pair(&ComFuncs::Whisper,		"Whisper another user."));
+	m_ValueCommands.emplace		("whisper",			std::make_pair(&ComFuncs::Whisper,		"Whisper another user."));
+	m_Commands.emplace			("help",					std::make_pair(&ComFuncs::PrintCommands,"Prints all commands to the user."));
 }
 
 Server::~Server()
@@ -54,19 +56,29 @@ void Server::Run()
 		// TODO: Make commands work
 		if (bufferStr[0] == '/') 
 		{
+			bool hasValue;
 			size_t spacePosition = bufferStr.find(' ');
 			std::string command = bufferStr.substr(1, spacePosition - 1);
 
-			if (command.size() + 1 == bufferStr.size())
-			{
-				continue;
-			}
+			//Ignores commands without space after it. (example: '/help' is ignored, but not '/help ')
+			//if (command.size() + 1 == bufferStr.size())
+			//{
+				//continue;
+			//}
+
+			//if spaceposition does not find its value. find returns string::npos
+			if (spacePosition == std::string::npos)
+				hasValue = false;
+			else
+				hasValue = true;
+ 
 			std::string commandValue = bufferStr.substr(spacePosition + 1);
+
 
 			// Example: /setname Richard <--- setname = command, Richard = value
 			// so result is command->second("Richard") -- Calls ComFuncs::SetName("Richard")
 			// TODO : Loop through the buffer until blankspace and save it into a string called "command"
-			if (m_Commands.find(command) == m_Commands.end())
+			if (m_ValueCommands.find(command) == m_ValueCommands.end() && m_Commands.find(command) == m_Commands.end())
 			{
 				std::string message = "Error! Could not find command: /" + command;
 				std::cout << message << std::endl;
@@ -75,12 +87,27 @@ void Server::Run()
 			}
 			else
 			{
-				std::string message = "Executing user command: /" + command + " " + commandValue;
-				std::cout << message << std::endl;
-				auto commandFunc = m_Commands.find(command);
-				//m_Commands.find(command)->second(commandValue, sendingUser, this);
-				// Loop through next word in the buffer until a new blankspace and save it into a string called "value"
-				commandFunc->second(commandValue, sendingUser, this);
+				std::string message;
+				if (hasValue)
+				{
+					message = "Executing user command: /" + command + " " + commandValue;
+					std::cout << message << std::endl;
+					auto commandFunc = m_ValueCommands.find(command);
+					//m_Commands.find(command)->second(commandValue, sendingUser, this);
+					// Loop through next word in the buffer until a new blankspace and save it into a string called "value"
+					commandFunc->second.first(commandValue, sendingUser, this);
+				}
+				else
+				{
+					message = "Executing user command: /" + command;
+
+					std::cout << message << std::endl;
+					auto commandFunc = m_Commands.find(command);
+					//m_Commands.find(command)->second(commandValue, sendingUser, this);
+					// Loop through next word in the buffer until a new blankspace and save it into a string called "value"
+					commandFunc->second.first(sendingUser, this);
+				}
+
 				continue;
 			}
 		}
@@ -199,80 +226,6 @@ void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, U
 	return;
 }
 
-void Server::DisconnectUser(User * user)
-{
-	for (auto it = m_Users.begin(); it != m_Users.end(); ) 
-	{
-		if (it->second == user)
-		{
-			delete it->second;
-			it = m_Users.erase(it);
-			break;
-		}
-		else
-		{
-			it++;
-		}
-	}
-}
-
-void Server::WhisperUser(User* sender, std::string buffer)
-{
-	size_t spacePosition = buffer.find(' ');
-	std::string targetUsername = buffer.substr(0, spacePosition);
-	std::transform(targetUsername.begin(), targetUsername.end(), targetUsername.begin(), ::tolower);
-
-	if (m_Users.find(targetUsername) == m_Users.end())
-	{
-		std::string message = "Could not find user with name " + targetUsername;
-		m_socket.send(message.c_str(), message.size() + 1, sender->GetAdress(), sender->GetPort());
-		return;
-	}
-	
-	std::string message = "<font color='#800000ff'><b>Whisper from " + sender->GetName() + ":</b> " + buffer.substr(spacePosition + 1) + "</color>";
-
-
-	User* targetUser = m_Users.find(targetUsername)->second;
-	m_socket.send(message.c_str(), message.size() + 1, targetUser->GetAdress(), targetUser->GetPort());
-	sm_historyLog.AddTextLog("ServerSent", message);
-
-	// Let sender know he whispered
-	message = "<font color='#800000ff'><b>Whisper to " + targetUsername + ":</b> " + buffer.substr(spacePosition + 1) + "</color>";
-	m_socket.send(message.c_str(), message.size() + 1, sender->GetAdress(), sender->GetPort());
-}
-
-void Server::ChangeUsername(User * sender, std::string buffer)
-{
-	// Make sure usernames can't have spaces
-	size_t spacepos = buffer.find(' ');
-	buffer = buffer.substr(0, spacepos);
-
-
-	// If the string isn't empty by now we set the new name of the user
-	if (buffer.empty())
-	{
-		std::string message = "Error! Could not change username. Field is empty.";
-		m_socket.send(message.c_str(), message.size() + 1, sender->GetAdress(), sender->GetPort());
-		return;
-	}
-	// Notify all users that a user changed name.
-	std::string oldName = sender->GetName();
-	std::string message = oldName + " changed name to " + buffer;
-	SendToAll(message);
-
-	// Send a command to the client to confirm it can change username
-	message = "/setname " + buffer;
-	sender->SetName(buffer);
-	m_socket.send(message.c_str(), message.length() + 1, sender->GetAdress(), sender->GetPort());
-
-	// Make old and new name lowercase so we can find and emplace
-	std::transform(oldName.begin(), oldName.end(), oldName.begin(), ::tolower);
-	std::transform(buffer.begin(), buffer.end(), buffer.begin(), ::tolower);
-	
-	m_Users.emplace(buffer, sender);
-	m_Users.erase(oldName);
-}
-
 void Server::SendToAll(std::string message)
 {
 	if (message.empty())
@@ -289,14 +242,37 @@ void Server::SendToAll(std::string message)
 
 void Server::CheckUsersConnected(sf::Time time)
 {
-	for (auto it : m_Users)
+	auto ito = std::begin(m_Users);
+
+	while (ito != std::end(m_Users))
 	{
-		float timediff = time.asSeconds() - it.second->GetTime().asSeconds();
+
+		float timediff = time.asSeconds() - ito->second->GetTime().asSeconds();
 		if (timediff > 10)
 		{
-			SendToAll("User timed out: " + it.second->GetName());
-			std::cout << "User timed out: " << it.second->GetName() << std::endl;
-			DisconnectUser(it.second);
+			SendToAll("User timed out: " + ito->second->GetName());
+			std::cout << "User timed out: " << ito->second->GetName() << std::endl;
+			DisconnectUser(ito->second);
+			ito = std::begin(m_Users); //ito iteration starts from the beginning
+			continue;
 		}
+		else
+			ito++;
 	}
+
+	//old?
+	/*for (auto it = m_Users.begin(); it != m_Users.end(); )
+	{
+		float timediff = time.asSeconds() - it->second->GetTime().asSeconds();
+		if (timediff > 10)
+		{
+			SendToAll("User timed out: " + it->second->GetName());
+			std::cout << "User timed out: " << it->second->GetName() << std::endl;
+			DisconnectUser(it->second);
+		}
+		else 
+		{
+			it++;
+		}
+	}*/
 }

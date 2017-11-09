@@ -128,6 +128,7 @@
     <ClCompile Include="ComFuncs.cpp" />
     <ClCompile Include="HistoryLog.cpp" />
     <ClCompile Include="Server.cpp" />
+    <ClCompile Include="Server_Commands.cpp" />
     <ClCompile Include="server_main.cpp" />
     <ClCompile Include="User.cpp" />
   </ItemGroup>
