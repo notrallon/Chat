@@ -129,11 +129,11 @@ void Server::CreateNewUser(const sf::IpAddress sender, const uShort port, User*&
 	sf::UdpSocket socket;
 
 	socket.bind(sf::UdpSocket::AnyPort);
-	socket.setBlocking(false);
 
 	std::string confirm = "/confirm " + std::to_string(socket.getLocalPort());
 	socket.send(confirm.c_str(), confirm.length() + 1, sender, port);
 
+	socket.setBlocking(false);
 	sf::Time time;
 	char buffer[256];
 	std::size_t received = 0;
@@ -146,7 +146,7 @@ void Server::CreateNewUser(const sf::IpAddress sender, const uShort port, User*&
 		static sf::Clock clock;
 		time = clock.getElapsedTime();
 		status = socket.receive(buffer, sizeof(buffer), received, keySender, keyPort);
-	} while (time.asSeconds() < 5.0f && !socket.Done);
+	} while (time.asSeconds() < 0.5f && status != sf::Socket::Status::Done);
 
 	if (buffer != SERVER_KEY)
 	{
@@ -185,9 +185,55 @@ void Server::FindUser(const sf::IpAddress sender, const uShort port, User *& sen
 		return;
 	}
 
+	sf::UdpSocket socket;
+
+	socket.bind(sf::UdpSocket::AnyPort);
+
+	std::string confirm = "/confirm " + std::to_string(socket.getLocalPort());
+	socket.send(confirm.c_str(), confirm.length() + 1, sender, port);
+
+	socket.setBlocking(false);
+	sf::Time time;
+	char buffer[256];
+	std::size_t received = 0;
+	sf::IpAddress keySender;
+	unsigned short keyPort;
+
+	sf::Socket::Status status;
+	static sf::Clock clock;
+	clock.restart();
+	do
+	{
+		time = clock.getElapsedTime();
+		status = socket.receive(buffer, sizeof(buffer), received, keySender, keyPort);
+	} while (time.asSeconds() < 5.0f && status != sf::Socket::Status::Done);
+
+	if (status != sf::Socket::Status::Done)
+	{
+		return;
+	}
+
+	if (buffer != SERVER_KEY)
+	{
+		return;
+	}
+
+	User* newUser = new User();
+	newUser->SetAdress(sender);
+	newUser->SetPort(port);
+	newUser->SetName(username);
+
+	std::string tempUserInfo = std::string(newUser->UserInfo());
+	sm_historyLog.AddTextLog("Users", tempUserInfo);
+
+	sendingUser = newUser;
+
+	AddUser(newUser);
+
 	// Start a new thread that creates a user and checks for the correct key.
-	m_CreateUserThread = new std::thread(CreateNewUser, sender, port, std::ref(sendingUser), username, this);
-	m_CreateUserThread->join();
+	//std::thread test(CreateNewUser, sender, port, std::ref(sendingUser), username, this);
+	//test.join();
+	//delete m_CreateUserThread;
 }
 
 void Server::SendToAll(std::string message)

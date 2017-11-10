@@ -46,6 +46,7 @@ void Server::ChangeUsername(User* sender, std::string buffer)
 
 void Server::DisconnectUser(std::string username)
 {
+	std::cout << "Disconnecting " << username << std::endl;
 	// Make sure the string is lowercase
 	std::transform(username.begin(), username.end(), username.begin(), ::tolower);
 	UserMap::iterator it = m_Users.find(username);

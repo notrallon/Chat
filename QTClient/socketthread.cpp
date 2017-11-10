@@ -111,6 +111,6 @@ void SocketThread::SetName(std::string name)
 void SocketThread::SendConfirmation(std::string portString)
 {
     uint16_t port = std::stoi(portString);
-    QString message = "3aBz0i13nOYWirfjwwZqoNrurrwM7Yot5qtvejnSRcBkSSZ77slbpgm5N6iLFAE4SBWVMlqTSzu6aWuvGcyLAj6iam67V5gq77wxFKeutdzuAybagpadiMjNipr6t59d";
-    m_Socket.writeDatagram(message.toStdString().c_str(), message.length() + 1, QHostAddress(m_ServerAdress), port);
+    std::string message = "3aBz0i13nOYWirfjwwZqoNrurrwM7Yot5qtvejnSRcBkSSZ77slbpgm5N6iLFAE4SBWVMlqTSzu6aWuvGcyLAj6iam67V5gq77wxFKeutdzuAybagpadiMjNipr6t59d\0";
+    m_Socket.writeDatagram(message.c_str(), message.length() + 1, QHostAddress(m_ServerAdress), port);
 }
