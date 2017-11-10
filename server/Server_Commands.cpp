@@ -6,6 +6,7 @@ void Server::ChangeUsername(User* sender, std::string buffer)
 	size_t spacepos = buffer.find(' ');
 	buffer = buffer.substr(0, spacepos);
 
+	// Get a lowercase version of the name so we can search for it
 	std::string newNameLower = buffer;
 	std::transform(newNameLower.begin(), newNameLower.end(), newNameLower.begin(), ::tolower);
 
@@ -29,7 +30,7 @@ void Server::ChangeUsername(User* sender, std::string buffer)
 	std::string message = oldName + " changed name to " + buffer;
 	SendToAll(message);
 
-	// Send a command to the client to confirm it can change username
+	// Send a command to the client to confirm the namechange
 	message = "/setname " + buffer;
 	sender->SetName(buffer);
 	m_socket.send(message.c_str(), message.length() + 1, sender->GetAdress(), sender->GetPort());
@@ -37,15 +38,19 @@ void Server::ChangeUsername(User* sender, std::string buffer)
 	// Make old and new name lowercase so we can find and emplace
 	std::transform(oldName.begin(), oldName.end(), oldName.begin(), ::tolower);
 
+	// Emplace the a new element in the map with our new name
+	// and erase the old element.
 	m_Users.emplace(newNameLower, sender);
 	m_Users.erase(oldName);
 }
 
 void Server::DisconnectUser(std::string username)
 {
+	// Make sure the string is lowercase
 	std::transform(username.begin(), username.end(), username.begin(), ::tolower);
 	UserMap::iterator it = m_Users.find(username);
 
+	// Delete the user from memory and remove the element from the map
 	delete it->second;
 	it->second = nullptr;
 	m_Users.erase(it);
@@ -53,10 +58,13 @@ void Server::DisconnectUser(std::string username)
 
 void Server::WhisperUser(User* sender, std::string buffer)
 {
+	// Get the name of the user the sender want to whisper
 	size_t spacePosition = buffer.find(' ');
 	std::string targetUsername = buffer.substr(0, spacePosition);
-	std::transform(targetUsername.begin(), targetUsername.end(), targetUsername.begin(), ::tolower);
+	std::transform(targetUsername.begin(), targetUsername.end(), targetUsername.begin(), ::tolower); // Make sure it's lowercase
 
+	// If we can't find a user with that name, let the sender know
+	// and return.
 	if (m_Users.find(targetUsername) == m_Users.end())
 	{
 		std::string message = "Could not find user with name " + targetUsername;
@@ -64,10 +72,13 @@ void Server::WhisperUser(User* sender, std::string buffer)
 		return;
 	}
 
+	// Format the whisper text.
 	std::string message = "<font color='#800000ff'><b>Whisper from " + sender->GetName() + ":</b> " + buffer.substr(spacePosition + 1) + "</color>";
 
-
+	// Get the user we want to whisper
 	User* targetUser = m_Users.find(targetUsername)->second;
+
+	// Send the message to the user
 	m_socket.send(message.c_str(), message.size() + 1, targetUser->GetAdress(), targetUser->GetPort());
 	sm_historyLog.AddTextLog("ServerSent", message);
 

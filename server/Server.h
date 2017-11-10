@@ -5,11 +5,14 @@
 #include <SFML/System.hpp>
 #include <map>
 #include <functional>
+#include <thread>
 
 #include "HistoryLog.h"
 #include "User.h"
 
 using UserMap = std::map<std::string, User*>;
+
+const std::string SERVER_KEY = "3aBz0i13nOYWirfjwwZqoNrurrwM7Yot5qtvejnSRcBkSSZ77slbpgm5N6iLFAE4SBWVMlqTSzu6aWuvGcyLAj6iam67V5gq77wxFKeutdzuAybagpadiMjNipr6t59d";
 
 class Server
 {
@@ -29,8 +32,12 @@ private:
 	sf::UdpSocket		m_socket;
 	CommandMap			m_Commands;
 	UserMap				m_Users;
+	std::thread* 		m_CreateUserThread;
 
-	void				CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser, std::string username);
+	static void			CreateNewUser(const sf::IpAddress sender, const uShort port, User*& sendingUser, std::string username, Server* server);
+	void				AddUser(User* user);
+
+	void				FindUser(const sf::IpAddress sender, const uShort port, User*& sendingUser, std::string username);
 	void				SendToAll(std::string message);
 	void				CheckUsersConnected(sf::Time time);
 

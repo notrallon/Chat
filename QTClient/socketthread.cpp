@@ -57,7 +57,7 @@ void SocketThread::run()
         s_time += m_Time.restart();
 
         //Ping server every 5 seconds
-        if (s_time > 5000)
+        if (s_time > 8000)
         {
             SendMessage('\0'); //Empty ping message
             s_time -= 5000;
@@ -68,6 +68,7 @@ void SocketThread::run()
 void SocketThread::InitCommands()
 {
     m_Commands.emplace("setname", &ComFuncs::SetName);
+    m_Commands.emplace("confirm", &ComFuncs::ConfirmClient);
 }
 
 void SocketThread::SendMessage(QString message)
@@ -105,4 +106,11 @@ void SocketThread::DecodeMessage(QString message)
 void SocketThread::SetName(std::string name)
 {
     m_Name = QString::fromStdString(name);
+}
+
+void SocketThread::SendConfirmation(std::string portString)
+{
+    uint16_t port = std::stoi(portString);
+    QString message = "3aBz0i13nOYWirfjwwZqoNrurrwM7Yot5qtvejnSRcBkSSZ77slbpgm5N6iLFAE4SBWVMlqTSzu6aWuvGcyLAj6iam67V5gq77wxFKeutdzuAybagpadiMjNipr6t59d";
+    m_Socket.writeDatagram(message.toStdString().c_str(), message.length() + 1, QHostAddress(m_ServerAdress), port);
 }

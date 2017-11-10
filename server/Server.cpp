@@ -47,9 +47,15 @@ void Server::Run()
 		std::string username = bufferStr.substr(0, spacePos);
 		bufferStr = bufferStr.substr(spacePos + 1);
 		
-		CreateUser(sender, port, sendingUser, username);
+		FindUser(sender, port, sendingUser, username);
+
+		if (sendingUser == nullptr)
+		{
+			continue;
+		}
 
 		time = clock.getElapsedTime();
+		
 		sendingUser->SetTime(time);
 		CheckUsersConnected(time);
 
@@ -118,7 +124,58 @@ void Server::Run()
 	m_Users.clear();
 }
 
-void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, User *& sendingUser, std::string username)
+void Server::CreateNewUser(const sf::IpAddress sender, const uShort port, User*& sendingUser, std::string username, Server* server)
+{
+	sf::UdpSocket socket;
+
+	socket.bind(sf::UdpSocket::AnyPort);
+	socket.setBlocking(false);
+
+	std::string confirm = "/confirm " + std::to_string(socket.getLocalPort());
+	socket.send(confirm.c_str(), confirm.length() + 1, sender, port);
+
+	sf::Time time;
+	char buffer[256];
+	std::size_t received = 0;
+	sf::IpAddress keySender;
+	unsigned short keyPort;
+
+	sf::Socket::Status status;
+	do 
+	{
+		static sf::Clock clock;
+		time = clock.getElapsedTime();
+		status = socket.receive(buffer, sizeof(buffer), received, keySender, keyPort);
+	} while (time.asSeconds() < 5.0f && !socket.Done);
+
+	if (buffer != SERVER_KEY)
+	{
+		return;
+	}
+
+	User* newUser = new User();
+	newUser->SetAdress(sender);
+	newUser->SetPort(port);
+	newUser->SetName(username);
+
+	std::string tempUserInfo = std::string(newUser->UserInfo());
+	sm_historyLog.AddTextLog("Users", tempUserInfo);
+
+	sendingUser = newUser;
+
+	server->AddUser(newUser);
+
+	return;
+}
+
+void Server::AddUser(User* user)
+{
+	std::string userLowercase = user->GetName();
+	std::transform(userLowercase.begin(), userLowercase.end(), userLowercase.begin(), ::tolower);
+	m_Users.emplace(userLowercase, user);
+}
+
+void Server::FindUser(const sf::IpAddress sender, const uShort port, User *& sendingUser, std::string username)
 {
 	std::string userLowercase = username;
 	std::transform(userLowercase.begin(), userLowercase.end(), userLowercase.begin(), ::tolower);
@@ -128,19 +185,9 @@ void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, U
 		return;
 	}
 
-	User* newUser = new User();
-	newUser->SetAdress(sender);
-	newUser->SetPort(port);
-	newUser->SetName(username);
-	
-
-	m_Users.emplace(userLowercase, newUser);
-
-	std::string tempUserInfo = std::string(newUser->UserInfo());
-	sm_historyLog.AddTextLog("Users", tempUserInfo);
-
-	sendingUser = newUser;
-	return;
+	// Start a new thread that creates a user and checks for the correct key.
+	m_CreateUserThread = new std::thread(CreateNewUser, sender, port, std::ref(sendingUser), username, this);
+	m_CreateUserThread->join();
 }
 
 void Server::SendToAll(std::string message)

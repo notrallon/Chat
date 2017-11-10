@@ -39,6 +39,7 @@ private:
     void DecodeMessage(QString message);
 
     void SetName(std::string name);
+    void SendConfirmation(std::string portString);
 };
 
 #endif // SOCKETTHREAD_H
