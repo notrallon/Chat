@@ -56,9 +56,10 @@ void SocketThread::run()
 
         s_time += m_Time.restart();
 
+        //Ping server every 5 seconds
         if (s_time > 5000)
         {
-            //SendMessage('\0');
+            SendMessage('\0'); //Empty ping message
             s_time -= 5000;
         }
     }

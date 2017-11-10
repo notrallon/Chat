@@ -13,6 +13,10 @@ using UserMap = std::map<std::string, User*>;
 
 class Server
 {
+	using CommandMap = std::map<std::string, std::pair<std::function<void(User*, Server*, std::string)>, std::string>>;
+	using CommandIterator = CommandMap::iterator;
+	using CommandValType = CommandMap::value_type;
+
 	friend struct ComFuncs;
 public:
 	Server();
@@ -21,23 +25,21 @@ public:
 	void Run();
 
 private:
-	using CommandMap = std::map<std::string, std::function<void(std::string, User*, Server*)>>;
-
 	static HistoryLog	sm_historyLog;
 	sf::UdpSocket		m_socket;
-	//std::vector<User*>	m_connectedUsers;
 	CommandMap			m_Commands;
 	UserMap				m_Users;
 
-	void				CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser);
 	void				CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser, std::string username);
-	void				DisconnectUser(User* user);
-	void				WhisperUser(User* sender, std::string buffer);
-	void				ChangeUsername(User* sender, std::string buffer);
-
 	void				SendToAll(std::string message);
-
 	void				CheckUsersConnected(sf::Time time);
+
+	//					Server_Commands (can be found in Server_Commands.cpp)
+	void				ChangeUsername(User* sender, std::string buffer);
+	void				DisconnectUser(std::string username);
+	void				WhisperUser(User* sender, std::string buffer);
+	void				PrintCommands(User* sender);
+
 };
 
 

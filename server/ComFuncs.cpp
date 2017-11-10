@@ -1,6 +1,16 @@
 #include "ComFuncs.h"
 
-void ComFuncs::SetName(std::string buffer, User * user, Server * server)
+//TODO: Remove this file (ComFuncs.cpp)
+//Unecessary file?
+
+/*void ComFuncs::SetName(std::string buffer, User * user, Server * server)
 {
-	server->ChangeUsername(user, buffer);
+	//server->ChangeUsername(user, buffer);
 }
+
+void ComFuncs::PrintCommands(std::string buffer, User * user, Server * server)
+{
+
+}*/
+
+

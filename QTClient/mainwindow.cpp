@@ -16,10 +16,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    SendMessage("/disconnect ");
     m_SocketThread->SetRunning(false);
     m_SocketThread->quit();
     while(!m_SocketThread->isFinished());
+    SendMessage("/disconnect ");
     delete m_SocketThread;
     delete ui;
 }
