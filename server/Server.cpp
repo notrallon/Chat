@@ -8,12 +8,12 @@ static std::vector<std::string> s_commandsStrings;
 
 Server::Server()
 {
-	m_ValueCommands.emplace		("setname",			std::make_pair(&ComFuncs::SetName,		"Set your username."));
-	m_ValueCommands.emplace		("sn",				std::make_pair(&ComFuncs::SetName,		"Set your username."));
-	m_Commands.emplace			("disconnect",			std::make_pair(&ComFuncs::Disconnect,	"Disconnect from the server."));
-	m_ValueCommands.emplace		("w",				std::make_pair(&ComFuncs::Whisper,		"Whisper another user."));
-	m_ValueCommands.emplace		("whisper",			std::make_pair(&ComFuncs::Whisper,		"Whisper another user."));
-	m_Commands.emplace			("help",					std::make_pair(&ComFuncs::PrintCommands,"Prints all commands to the user."));
+	m_Commands.emplace		("setname",			std::make_pair(&ComFuncs::SetName,		"Set your username."));
+	m_Commands.emplace		("sn",				std::make_pair(&ComFuncs::SetName,		"Set your username."));
+	m_Commands.emplace		("disconnect",		std::make_pair(&ComFuncs::Disconnect,	"Disconnect from the server."));
+	m_Commands.emplace		("w",				std::make_pair(&ComFuncs::Whisper,		"Whisper another user."));
+	m_Commands.emplace		("whisper",			std::make_pair(&ComFuncs::Whisper,		"Whisper another user."));
+	m_Commands.emplace		("help",			std::make_pair(&ComFuncs::PrintCommands,"Prints all commands to the user."));
 }
 
 Server::~Server()
@@ -56,29 +56,22 @@ void Server::Run()
 		// TODO: Make commands work
 		if (bufferStr[0] == '/') 
 		{
-			bool hasValue;
+			//bool hasValue;
 			size_t spacePosition = bufferStr.find(' ');
 			std::string command = bufferStr.substr(1, spacePosition - 1);
-
-			//Ignores commands without space after it. (example: '/help' is ignored, but not '/help ')
-			//if (command.size() + 1 == bufferStr.size())
-			//{
-				//continue;
-			//}
-
-			//if spaceposition does not find its value. find returns string::npos
-			if (spacePosition == std::string::npos)
-				hasValue = false;
-			else
-				hasValue = true;
  
 			std::string commandValue = bufferStr.substr(spacePosition + 1);
+
+			if (spacePosition == std::string::npos)
+			{
+				commandValue = '\0';
+			}
 
 
 			// Example: /setname Richard <--- setname = command, Richard = value
 			// so result is command->second("Richard") -- Calls ComFuncs::SetName("Richard")
 			// TODO : Loop through the buffer until blankspace and save it into a string called "command"
-			if (m_ValueCommands.find(command) == m_ValueCommands.end() && m_Commands.find(command) == m_Commands.end())
+			if (m_Commands.find(command) == m_Commands.end())
 			{
 				std::string message = "Error! Could not find command: /" + command;
 				std::cout << message << std::endl;
@@ -88,26 +81,11 @@ void Server::Run()
 			else
 			{
 				std::string message;
-				if (hasValue)
-				{
-					message = "Executing user command: /" + command + " " + commandValue;
-					std::cout << message << std::endl;
-					auto commandFunc = m_ValueCommands.find(command);
-					//m_Commands.find(command)->second(commandValue, sendingUser, this);
-					// Loop through next word in the buffer until a new blankspace and save it into a string called "value"
-					commandFunc->second.first(commandValue, sendingUser, this);
-				}
-				else
-				{
-					message = "Executing user command: /" + command;
 
-					std::cout << message << std::endl;
-					auto commandFunc = m_Commands.find(command);
-					//m_Commands.find(command)->second(commandValue, sendingUser, this);
-					// Loop through next word in the buffer until a new blankspace and save it into a string called "value"
-					commandFunc->second.first(sendingUser, this);
-				}
-
+				message = "Executing user command: /" + command + " " + commandValue;
+				std::cout << message << std::endl;
+				CommandIterator commandFunc = m_Commands.find(command);
+				commandFunc->second.first(sendingUser, this, commandValue);
 				continue;
 			}
 		}
@@ -132,73 +110,12 @@ void Server::Run()
 		}
 	}
 
-	for (auto it : m_Users) {
+	for (UserMap::value_type it : m_Users) {
 		delete it.second;
 		it.second = nullptr;
 	}
 
 	m_Users.clear();
-}
-
-void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, User*& sendingUser)
-{
-
-	if (m_Users.find("username") != m_Users.end())
-	{
-		// user = m_Users.find(username)->second;
-		// return;
-	}
-
-	// else create a new user
-
-
-	//if users exist
-	if (m_Users.size() > 0)
-	{
-		for (auto it = m_Users.begin(); it != m_Users.end(); it++)
-		{
-			User* user = it->second;
-			//if it is the user sending the message. sendingUser is the user
-			if (user->GetAdress() == sender && user->GetPort() == port)
-			{
-				sendingUser = user;
-				return;
-			}
-		}
-
-		User* newUser = new User();
-		newUser->SetAdress(sender);
-		newUser->SetPort(port);
-		newUser->SetName("Anon" + std::to_string(m_Users.size() + 1));
-		std::string username = newUser->GetName();
-		std::transform(username.begin(), username.end(), username.begin(), ::tolower);
-
-		m_Users.emplace(username, newUser);
-
-		std::string tempUserInfo = std::string(newUser->UserInfo());
-		sm_historyLog.AddTextLog("Users", tempUserInfo);
-
-		sendingUser = newUser;
-		return;
-	}
-	//if no user exists
-	else
-	{
-		User* newUser = new User();
-		newUser->SetAdress(sender);
-		newUser->SetPort(port);
-		newUser->SetName("Anon1");
-		std::string username = newUser->GetName();
-		std::transform(username.begin(), username.end(), username.begin(), ::tolower);
-
-		m_Users.emplace(username, newUser);
-
-		std::string tempUserInfo = std::string(newUser->UserInfo());
-		sm_historyLog.AddTextLog("Users", tempUserInfo);
-
-		sendingUser = newUser;
-		return;
-	}
 }
 
 void Server::CreateUser(const sf::IpAddress sender, const unsigned short port, User *& sendingUser, std::string username)
@@ -233,7 +150,7 @@ void Server::SendToAll(std::string message)
 		return;
 	}
 
-	for (auto it : m_Users)
+	for (UserMap::value_type it : m_Users)
 	{
 		m_socket.send(message.c_str(), message.size() + 1, it.second->GetAdress(), it.second->GetPort());
 		sm_historyLog.AddTextLog("ServerSent", message);
@@ -242,37 +159,22 @@ void Server::SendToAll(std::string message)
 
 void Server::CheckUsersConnected(sf::Time time)
 {
-	auto ito = std::begin(m_Users);
+	UserMap::iterator ito = std::begin(m_Users);
 
 	while (ito != std::end(m_Users))
 	{
-
 		float timediff = time.asSeconds() - ito->second->GetTime().asSeconds();
-		if (timediff > 10)
+		if (timediff > 10) 
 		{
 			SendToAll("User timed out: " + ito->second->GetName());
 			std::cout << "User timed out: " << ito->second->GetName() << std::endl;
-			DisconnectUser(ito->second);
+			DisconnectUser(ito->first);
 			ito = std::begin(m_Users); //ito iteration starts from the beginning
 			continue;
 		}
 		else
+		{
 			ito++;
+		}
 	}
-
-	//old?
-	/*for (auto it = m_Users.begin(); it != m_Users.end(); )
-	{
-		float timediff = time.asSeconds() - it->second->GetTime().asSeconds();
-		if (timediff > 10)
-		{
-			SendToAll("User timed out: " + it->second->GetName());
-			std::cout << "User timed out: " << it->second->GetName() << std::endl;
-			DisconnectUser(it->second);
-		}
-		else 
-		{
-			it++;
-		}
-	}*/
 }

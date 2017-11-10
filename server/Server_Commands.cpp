@@ -41,21 +41,14 @@ void Server::ChangeUsername(User* sender, std::string buffer)
 	m_Users.erase(oldName);
 }
 
-void Server::DisconnectUser(User* user)
+void Server::DisconnectUser(std::string username)
 {
-	for (auto it = m_Users.begin(); it != m_Users.end(); )
-	{
-		if (it->second == user)
-		{
-			delete it->second;
-			it = m_Users.erase(it);
-			break;
-		}
-		else
-		{
-			it++;
-		}
-	}
+	std::transform(username.begin(), username.end(), username.begin(), ::tolower);
+	UserMap::iterator it = m_Users.find(username);
+
+	delete it->second;
+	it->second = nullptr;
+	m_Users.erase(it);
 }
 
 void Server::WhisperUser(User* sender, std::string buffer)
@@ -89,20 +82,12 @@ void Server::PrintCommands(User* sender)
 
 	std::string message = "";
 
-	for (auto it : m_ValueCommands)
+	for (CommandValType it : m_Commands)
 	{
 		//Using \n does not give a new line in QT text edit, use "<br> </br>" instead
 		//message += "<b>/" + it.first + "</b>" + " -> " + it.second.second + "\n";
 
-		message += "<br><b>/" + it.first + "</b>" + " -> " + it.second.second + "</br>";
-		//Skriver ut alla kommandon i (,jag tror,) bokstavsordning
-	}
-	for (auto it : m_Commands)
-	{
-		//Using \n does not give a new line in QT text edit, use "<br> </br>" instead
-		//message += "<b>/" + it.first + "</b>" + " -> " + it.second.second + "\n";
-
-		message += "<br><b>/" + it.first + "</b>" + " -> " + it.second.second + "</br>";
+		message += "<b>/" + it.first + "</b>" + " -> " + it.second.second + "<br>";
 		//Skriver ut alla kommandon i (,jag tror,) bokstavsordning
 	}
 	m_socket.send(message.c_str(), message.size() + 1, sender->GetAdress(), sender->GetPort());
